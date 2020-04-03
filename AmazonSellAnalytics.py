@@ -1,9 +1,12 @@
 from Order import Order
+from plotly.offline import plot
+import plotly.graph_objs as go
+from tkinter import filedialog
+from tkinter import *
 
 
 class AmazonSellAnalytics(object):
-    def __init__(self,fileName):
-        file = open(fileName, "r")
+    def __init__(self,file):
         titles = file.readline().split("\t")
         unprocessedContent = file.readlines()
         self.orders = []
@@ -47,34 +50,78 @@ class AmazonSellAnalytics(object):
             self.orders[-1].purchaseOrderNumber = temp[30]
             self.orders[-1].priceDesignation = temp[31]
 
-    def howManyKindProductIsOrdered(self):
-        productsAsin = []
-        for order in self.orders:
-            if order.asin not in productsAsin:
-                productsAsin.append(order.asin)
-        print("The number of kinds is "+str(len(productsAsin)))
-        # for productAsin in productsAsin:
-        #     print(productAsin)
+    def plotBar(self,x,y,name):
+        trace = go.Bar(x = x,y = y,name = name)
+        plot([trace],filename = name + ".html")
+
 
     def shippingStatus(self):
-        shipped = 0
-        notShipped = 0
+        unShipped = 0
         for order in self.orders:
-            if order.itemStatus == "Shipped":
-                shipped += 1
-        print("For total "+str(len(self.orders))+", "+str(shipped)+" are shipped")
+            if order.itemStatus == "Unshipped":
+                unShipped += 1
+        print("有 "+str(unShipped)+" 个待发货")
 
-    def bestSellProductAsin(self):
-        sell = {}
+    def bestSellProductSkuAndHowManyKindsTotal(self):
+        sells = {}
         for order in self.orders:
             if order.orderStatus != "Cancelled":
-                if order.asin not in sell.keys():
-                    sell[order.asin] = 1
+                if order.sku not in sells.keys():
+                    sells[order.sku] = 1
                 else:
-                    sell[order.asin] += 1
-        print(sell)
+                    sells[order.sku] += 1
+        #plot
+        x = []
+        y = []
+        for sku in sells.keys():
+            x.append(sku)
+            y.append(sells[sku])
+        self.plotBar(x,y,"bestSellProductSkuAndHowManyKindsTotal "+str(len(sells.keys()))+" kinds sold")
+
+    def whenOrdersComeEveryday(self):
+        def utcConvertToBeijing(utc):
+            result = int(utc)+8
+            if result >= 24:
+                result -= 24
+            return str(result)
+
+        orderTime = {}
+        for order in self.orders:
+            if order.orderStatus != "Cancelled":
+                if utcConvertToBeijing(order.purchaseTime.split(":")[0]) not in orderTime.keys():
+                    orderTime[utcConvertToBeijing(order.purchaseTime.split(":")[0])] = 1
+                else:
+                    orderTime[utcConvertToBeijing(order.purchaseTime.split(":")[0])] += 1
+        # print(orderTime)
+        #plot
+        x = []
+        y = []
+        for time in orderTime.keys():
+            x.append(time)
+            y.append(orderTime[time])
+        self.plotBar(x,y,"whenOrdersComeEveryday(Beijing Time)")
+
+    def dailyRevenu(self):
+        revenue = {}
+        for order in self.orders:
+            if order.orderStatus != "Cancelled":
+                if order.purchaseDate not in revenue.keys():
+                    revenue[order.purchaseDate] = float(order.itemPrice)
+                else:
+                    revenue[order.purchaseDate] += float(order.itemPrice)
+        x = []
+        y = []
+        for rev in revenue.keys():
+            x.append(rev)
+            y.append(revenue[rev])
+        self.plotBar(x,y,"dailyRevenu")
 
 
-test = AmazonSellAnalytics("txt.txt")
-test.bestSellProductAsin()
+root = Tk()
+root.file = filedialog.askopenfile()
+analysis = AmazonSellAnalytics(root.file)
+analysis.shippingStatus()
+analysis.bestSellProductSkuAndHowManyKindsTotal()
+analysis.whenOrdersComeEveryday()
+analysis.dailyRevenu()
         
