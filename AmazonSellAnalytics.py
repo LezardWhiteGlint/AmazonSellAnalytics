@@ -3,16 +3,28 @@ from plotly.offline import plot
 import plotly.graph_objs as go
 from tkinter import filedialog
 from tkinter import *
+import pymongo
+from pymongo import MongoClient
 
 
 class AmazonSellAnalytics(object):
-    def __init__(self,file):
-        titles = file.readline().split("\t")
-        unprocessedContent = file.readlines()
+    def __init__(self):
+
         self.orders = []
         # check if input file is correct
-        assert len(titles) == 32, ("错误的文件，请确保文件是从 库存和销售报告---->所有订单 中导出")
-        #read the content, put them in the storage class
+        #initiate data base
+        self.client = MongoClient()
+        self.DB = self.client.Amazon
+        self.Collection = self.DB.AmazonAnalysisTest3
+
+
+    def updateDataBase(self,file):
+        unprocessedContent = []
+        if file != None:
+            titles = file.readline().split("\t")
+            unprocessedContent = file.readlines()
+            assert len(titles) == 32, ("错误的文件，请确保文件是从 库存和销售报告---->所有订单 中导出")
+            # read the content, put them in the storage class
         for content in unprocessedContent:
             temp = content.split("\t")
             self.orders.append(Order())
@@ -50,26 +62,53 @@ class AmazonSellAnalytics(object):
             self.orders[-1].purchaseOrderNumber = temp[30]
             self.orders[-1].priceDesignation = temp[31]
 
+        for order in self.orders:
+            post = {
+                "amazonOrderID":order.amazonOrderID,
+                "purchaseDate":order.purchaseDate,
+                "purchaseTime":order.purchaseTime,
+                "sku":order.sku,
+                "orderStatus":order.orderStatus,
+                "asin":order.asin,
+                "quantity":order.quantity,
+                "currency":order.currency,
+                "itemPrice":order.itemPrice,
+                "itemTax":order.itemTax,
+                "itemShippingPrice":order.shippingPrice,
+                "itemShippingTax":order.shippingTax,
+                "itemGiftWrapPrice":order.giftWrapPrice,
+                "itemGiftWrapTax":order.giftWrapTax,
+                "itemPromotionDiscount": order.itemPromotionDiscount,
+                "shipPromotionDiscount":order.shipPromotionDiscount,
+                "shipState":order.shipState,
+                "shipCountry":order.shipCountry
+            }
+            self.Collection.replace_one({"amazonOrderID":order.amazonOrderID}, post, upsert= True)
+        print("Data base updated")
+
+
+
     def plotBar(self,x,y,name):
         trace = go.Bar(x = x,y = y,name = name)
         plot([trace],filename = name + ".html")
 
 
     def shippingStatus(self):
-        unShipped = 0
-        for order in self.orders:
-            if order.itemStatus == "Unshipped":
-                unShipped += 1
-        print("有 "+str(unShipped)+" 个待发货")
+        unShipped = self.Collection.find({"orderStatus":"Pending"})
+        count = 0
+        for i in unShipped:
+            count += 1
+        print("有 "+str(count)+" 个待发货")
 
     def bestSellProductSkuAndHowManyKindsTotal(self):
         sells = {}
-        for order in self.orders:
-            if order.orderStatus != "Cancelled":
-                if order.sku not in sells.keys():
-                    sells[order.sku] = 1
-                else:
-                    sells[order.sku] += 1
+        for order in self.Collection.find({"orderStatus":{"$in":["Shipped","Pending"]}}):
+            # print(order["orderStatus"])
+            if order["sku"] not in sells.keys():
+                sells[order["sku"]] = 1
+            else:
+                sells[order["sku"]] += 1
+
         #plot
         x = []
         y = []
@@ -78,37 +117,37 @@ class AmazonSellAnalytics(object):
             y.append(sells[sku])
         self.plotBar(x,y,"bestSellProductSkuAndHowManyKindsTotal "+str(len(sells.keys()))+" kinds sold")
 
-    def whenOrdersComeEveryday(self):
-        def utcConvertToBeijing(utc):
-            result = int(utc)+8
-            if result >= 24:
-                result -= 24
-            return str(result)
-
-        orderTime = {}
-        for order in self.orders:
-            if order.orderStatus != "Cancelled":
-                if utcConvertToBeijing(order.purchaseTime.split(":")[0]) not in orderTime.keys():
-                    orderTime[utcConvertToBeijing(order.purchaseTime.split(":")[0])] = 1
-                else:
-                    orderTime[utcConvertToBeijing(order.purchaseTime.split(":")[0])] += 1
-        # print(orderTime)
-        #plot
-        x = []
-        y = []
-        for time in orderTime.keys():
-            x.append(time)
-            y.append(orderTime[time])
-        self.plotBar(x,y,"whenOrdersComeEveryday(Beijing Time)")
+    # def whenOrdersComeEveryday(self):
+    #     def utcConvertToBeijing(utc):
+    #         result = int(utc)+8
+    #         if result >= 24:
+    #             result -= 24
+    #         return str(result)
+    #
+    #     orderTime = {}
+    #     for order in self.orders:
+    #         if order.orderStatus != "Cancelled":
+    #             if utcConvertToBeijing(order.purchaseTime.split(":")[0]) not in orderTime.keys():
+    #                 orderTime[utcConvertToBeijing(order.purchaseTime.split(":")[0])] = 1
+    #             else:
+    #                 orderTime[utcConvertToBeijing(order.purchaseTime.split(":")[0])] += 1
+    #     # print(orderTime)
+    #     #plot
+    #     x = []
+    #     y = []
+    #     for time in orderTime.keys():
+    #         x.append(time)
+    #         y.append(orderTime[time])
+    #     self.plotBar(x,y,"whenOrdersComeEveryday(Beijing Time)")
 
     def dailyRevenu(self):
         revenue = {}
-        for order in self.orders:
-            if order.orderStatus != "Cancelled":
-                if order.purchaseDate not in revenue.keys():
-                    revenue[order.purchaseDate] = float(order.itemPrice)
-                else:
-                    revenue[order.purchaseDate] += float(order.itemPrice)
+        for order in self.Collection.find({"orderStatus":{"$in":["Shipped","Pending"]}}):
+            # print(order)
+            if order["purchaseDate"] not in revenue.keys():
+                revenue[order["purchaseDate"]] = float(order["itemPrice"])
+            else:
+                revenue[order["purchaseDate"]] += float(order["itemPrice"])
         x = []
         y = []
         for rev in revenue.keys():
@@ -116,12 +155,117 @@ class AmazonSellAnalytics(object):
             y.append(revenue[rev])
         self.plotBar(x,y,"dailyRevenu")
 
+    # def orderDateForEachSku(self):
+    #     orderDates = {}
+    #     skuList = []
+    #     for order in self.orders:
+    #         if order.orderStatus != "Cancelled":
+    #             if order.sku not in skuList:
+    #                 skuList.append(order.sku)
+    #                 orderDates[order.sku] = [order.purchaseDate]
+    #             else:
+    #                 orderDates[order.sku].append(order.purchaseDate)
+    #     plotData = []
+    #     print(orderDates)
+    #     for sku in orderDates.keys():
+    #         x = []
+    #         y = []
+    #         for date in orderDates[sku]:
+    #             x.append(date)
+    #             y.append(1)
+    #         trace = go.Bar(x = x,y = y,name = sku)
+    #         plotData.append(trace)
+    #     plot(plotData,filename= "test.html")
+    #
+    # def productCount(self,sku):
+    #     count = 0
+    #     for order in self.orders:
+    #         if order.sku == sku:
+    #             count += 1
+    #     print(sku +" count is "+ str(count))
 
-root = Tk()
-root.file = filedialog.askopenfile()
-analysis = AmazonSellAnalytics(root.file)
-analysis.shippingStatus()
-analysis.bestSellProductSkuAndHowManyKindsTotal()
-analysis.whenOrdersComeEveryday()
-analysis.dailyRevenu()
-        
+    def skuRevenu(self):
+        sku = []
+        #get sku list
+        for order in self.Collection.find({"orderStatus":{"$in":["Shipped","Pending"]}}):
+            if order["sku"] not in sku:
+                sku.append(order["sku"])
+        #for each sku get it curve and add to trace
+        plotData = []
+        for targetSku in sku:
+            orderDates = {}
+            for order in self.Collection.find({"orderStatus":{"$in":["Shipped","Pending"]},"sku":targetSku}).sort("purchaseDate",pymongo.ASCENDING):
+                if order["purchaseDate"] not in orderDates.keys():
+                    orderDates[order["purchaseDate"]] = float(order["itemPrice"])
+                else:
+                    orderDates[order["purchaseDate"]] += float(order["itemPrice"])
+            x = []
+            y = []
+            for date in orderDates.keys():
+                x.append(date)
+                y.append(orderDates[date])
+            trace = go.Scatter(
+                x = x,
+                y = y,
+                name = targetSku
+            )
+            plotData.append(trace)
+        plot(plotData,filename="skuRevenu.html")
+
+    def bestSellsMonitor(self,monitorSkuList):
+        sku = monitorSkuList
+        plotData = []
+        for targetSku in sku:
+            orderDates = {}
+            for order in self.Collection.find({"orderStatus": {"$in": ["Shipped", "Pending"]}, "sku": targetSku}).sort(
+                    "purchaseDate", pymongo.ASCENDING):
+                # print(order["purchaseDate"])
+                if order["purchaseDate"] not in orderDates.keys():
+                    orderDates[order["purchaseDate"]] = float(order["itemPrice"])
+                else:
+                    orderDates[order["purchaseDate"]] += float(order["itemPrice"])
+            x = []
+            y = []
+            for date in orderDates.keys():
+                x.append(date)
+                y.append(orderDates[date])
+            trace = go.Bar(
+                x=x,
+                y=y,
+                name=targetSku
+            )
+            plotData.append(trace)
+        plot(plotData, filename="bestSellsMonitor.html")
+
+
+
+
+class interface(object):
+    def __init__(self):
+        self.analysis = AmazonSellAnalytics()
+        self.root = Tk()
+        loadDataButton = Button(self.root, text="Load Data", command=self.loadData)
+        loadDataButton.pack()
+        reportButton = Button(self.root, text="Report Generator", command=self.reportOutput)
+        reportButton.pack()
+        self.root.mainloop()
+
+
+    def loadData(self):
+        print("load")
+        self.root.file = filedialog.askopenfile()
+        self.analysis.updateDataBase(self.root.file)
+
+    def reportOutput(self):
+        self.analysis.bestSellsMonitor(["dogleash1", "dogleash2", "dogleash3", "sportgreenpromax"])
+        self.analysis.skuRevenu()
+        self.analysis.dailyRevenu()
+
+    def main(self):
+        pass
+
+
+
+test = interface()
+
+
