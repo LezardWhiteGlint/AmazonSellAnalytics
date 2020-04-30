@@ -257,12 +257,9 @@ class interface(object):
         self.analysis.updateDataBase(self.root.file)
 
     def reportOutput(self):
-        self.analysis.bestSellsMonitor(["dogleash1", "dogleash2", "dogleash3", "sportgreenpromax"])
+        self.analysis.bestSellsMonitor(["dogleash1", "dogleash2", "dogleash3", "dogleash4","sportgreenpromax","sportbluepromax"])
         self.analysis.skuRevenu()
         self.analysis.dailyRevenu()
-
-    def main(self):
-        pass
 
 
 
