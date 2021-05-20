@@ -2,6 +2,16 @@ from OrderWithAddress import OrderWithAddress
 from tkinter import filedialog
 from tkinter import *
 import openpyxl
+import os,sys
+
+
+if getattr(sys, 'frozen', False):
+    # If the application is run as a bundle, the pyInstaller bootloader
+    # extends the sys module by a flag frozen=True and sets the app
+    # path into variable _MEIPASS'.
+    application_path = sys._MEIPASS
+else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class OrderRecordXlsx(object):
@@ -21,14 +31,14 @@ class OrderRecordXlsx(object):
             if file != None:
                 titles = file.readline().split("\t")
                 unprocessedContent = file.readlines()
-                assert titles == ['order-id', 'order-item-id', 'purchase-date', 'payments-date', 'buyer-email',
-                                  'buyer-name', 'buyer-phone-number', 'sku', 'product-name', 'quantity-purchased',
-                                  'currency', 'item-price', 'item-tax', 'shipping-price', 'shipping-tax',
-                                  'ship-service-level', 'recipient-name', 'ship-address-1', 'ship-address-2',
-                                  'ship-address-3', 'ship-city', 'ship-state', 'ship-postal-code', 'ship-country',
-                                  'ship-phone-number', 'delivery-start-date', 'delivery-end-date', 'delivery-time-zone',
-                                  'delivery-Instructions', 'is-business-order', 'purchase-order-number',
-                                  'price-designation\n'], ("输入文件错误，需要订单报告，在订单---订单报告中下载")
+                # assert titles == ['order-id', 'order-item-id', 'purchase-date', 'payments-date', 'buyer-email',
+                #                   'buyer-name', 'buyer-phone-number', 'sku', 'product-name', 'quantity-purchased',
+                #                   'currency', 'item-price', 'item-tax', 'shipping-price', 'shipping-tax',
+                #                   'ship-service-level', 'recipient-name', 'ship-address-1', 'ship-address-2',
+                #                   'ship-address-3', 'ship-city', 'ship-state', 'ship-postal-code', 'ship-country',
+                #                   'ship-phone-number', 'delivery-start-date', 'delivery-end-date', 'delivery-time-zone',
+                #                   'delivery-Instructions', 'is-business-order', 'purchase-order-number',
+                #                   'price-designation\n'], ("输入文件错误，需要订单报告，在订单---订单报告中下载")
             for content in unprocessedContent:
                 temp = content.split("\t")
                 self.orderWithAddress.append(OrderWithAddress())
@@ -58,7 +68,7 @@ class OrderRecordXlsx(object):
         if file != None:
             titles = file.readline().split("\t")
             unprocessedContent = file.readlines()
-            assert len(titles) == 16,("需要选择库存报告")
+            # assert len(titles) == 16,("需要选择库存报告")
         for product in unprocessedContent:
             temp = product.split("\t")
             self.skuAsin[temp[0]] = temp[1]
@@ -104,8 +114,7 @@ class OrderRecordXlsx(object):
             sheet["Q"+str(row)] = order.shipAddress+"\n"+order.shipCity+"\n"+order.shipState+"\n"+order.shipPostalCode+"\n"+order.shipCountry
             sheet["R"+str(row)] = order.buyerPhoneNumber
             sheet["S"+str(row)] = ""
-        xlsx.save("orderWithAddress.xlsx")
-
+        xlsx.save(application_path+"/orderWithAddress.xlsx")
 
 
 

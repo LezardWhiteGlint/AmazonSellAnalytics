@@ -1,12 +1,17 @@
 from Order import Order
 from plotly.offline import plot
+import chart_studio.plotly as py
 import plotly.graph_objs as go
 from tkinter import filedialog
 from tkinter import *
 import pymongo
 from pymongo import MongoClient
 
+import chart_studio
+chart_studio.tools.set_credentials_file(username='lezardvaleth66', api_key='Fwgzi9cSidhFfJSfsRHg')
+chart_studio.tools.set_config_file(world_readable=True,sharing='public')
 
+"""文件是从 库存和销售报告---->所有订单 中导出"""
 class AmazonSellAnalytics(object):
     def __init__(self):
 
@@ -15,7 +20,7 @@ class AmazonSellAnalytics(object):
         #initiate data base
         self.client = MongoClient()
         self.DB = self.client.Amazon
-        self.Collection = self.DB.AmazonAnalysisTest3
+        self.Collection = self.DB.AmazonAnalysisSuperMoneyBall
 
 
     def updateDataBase(self,file):
@@ -145,15 +150,23 @@ class AmazonSellAnalytics(object):
         for order in self.Collection.find({"orderStatus":{"$in":["Shipped","Pending"]}}):
             # print(order)
             if order["purchaseDate"] not in revenue.keys():
-                revenue[order["purchaseDate"]] = float(order["itemPrice"])
+                try:
+                    revenue[order["purchaseDate"]] = float(order["itemPrice"])
+                except ValueError:
+                    print(order["itemPrice"])
             else:
-                revenue[order["purchaseDate"]] += float(order["itemPrice"])
+                try:
+                    revenue[order["purchaseDate"]] += float(order["itemPrice"])
+                except ValueError:
+                    print(order["itemPrice"])
         x = []
         y = []
         for rev in revenue.keys():
             x.append(rev)
             y.append(revenue[rev])
-        self.plotBar(x,y,"dailyRevenu")
+        # self.plotBar(x,y,"dailyRevenu")
+        trace = go.Bar(x = x,y = y)
+        py.plot([trace],filename = "revenue", auto_open= True)
 
     # def orderDateForEachSku(self):
     #     orderDates = {}
@@ -196,7 +209,10 @@ class AmazonSellAnalytics(object):
             orderDates = {}
             for order in self.Collection.find({"orderStatus":{"$in":["Shipped","Pending"]},"sku":targetSku}).sort("purchaseDate",pymongo.ASCENDING):
                 if order["purchaseDate"] not in orderDates.keys():
-                    orderDates[order["purchaseDate"]] = float(order["itemPrice"])
+                    try:
+                        orderDates[order["purchaseDate"]] = float(order["itemPrice"])
+                    except ValueError:
+                        print(order["itemPrice"])
                 else:
                     orderDates[order["purchaseDate"]] += float(order["itemPrice"])
             x = []
@@ -221,7 +237,10 @@ class AmazonSellAnalytics(object):
                     "purchaseDate", pymongo.ASCENDING):
                 # print(order["purchaseDate"])
                 if order["purchaseDate"] not in orderDates.keys():
-                    orderDates[order["purchaseDate"]] = float(order["itemPrice"])
+                    try:
+                        orderDates[order["purchaseDate"]] = float(order["itemPrice"])
+                    except ValueError:
+                        print(order["itemPrice"])
                 else:
                     orderDates[order["purchaseDate"]] += float(order["itemPrice"])
             x = []
@@ -257,7 +276,7 @@ class interface(object):
         self.analysis.updateDataBase(self.root.file)
 
     def reportOutput(self):
-        self.analysis.bestSellsMonitor(["dogleash1", "dogleash2", "dogleash3", "dogleash4","sportgreenpromax","sportbluepromax"])
+        self.analysis.bestSellsMonitor(["2duragbutton","watchband-rainbow","watchband-rainbow44","fitbit-pink","fitbit-black","IK-0E1K-DW3N"])
         self.analysis.skuRevenu()
         self.analysis.dailyRevenu()
 
