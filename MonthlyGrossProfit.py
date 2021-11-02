@@ -56,14 +56,18 @@ test.itemsCost = {
     '2duragbutton':15,
     '38mmcase':8,
     '42mmcase':8,
-    'frogphonecase':8.5,
+    'frogphonecase':9.5,
     'rainbowband22mm':10,
     'rainbowcase-40mm':8,
     'rainbowcase-44mm':8,
     'stretchyband3840mm':10,
     'stretchyband4244mm':10,
     'watchband-rainbow':20,
-    'watchband-rainbow44':20
+    'watchband-rainbow44':20,
+    'cat banner':18.5,
+    '4Z-H83K-ZUX5':15,
+    'rainbow banner':18.5,
+    'rainbow-airpodcase':15,
 }
 
 test.getTotalRevenue()
