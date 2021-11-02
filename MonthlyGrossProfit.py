@@ -45,6 +45,7 @@ class MonthlyGrossProfit(object):
         print("------------------------------------------")
 
     def getGrossProfit(self):
+        print("The total gross profit is")
         print(self.totalRevenue*self.conversionRate - self.totalCost)
 
 
