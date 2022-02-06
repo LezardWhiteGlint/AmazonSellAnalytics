@@ -38,6 +38,8 @@ class MonthlyGrossProfit(object):
             try:
                 result += self.itemCount[sku] * self.itemsCost[sku]
             except:
+                print("Cannot find Cost with SKU -----")
+                print(sku)
                 pass
         self.totalCost = result
         print("The total cost of items sold is")
@@ -69,6 +71,15 @@ test.itemsCost = {
     '4Z-H83K-ZUX5':15,
     'rainbow banner':18.5,
     'rainbow-airpodcase':15,
+    'phonelens-rosegold':9.1,
+    'phonelens-silver-gold':9.1,
+    'phonelens-silver':9.1,
+    'sink stopper black':22.5,
+    'splash guards':12.5,
+    'evil eye tiebacks':14.5,
+    'back applicator-leopard':11.5
+
+
 }
 
 test.getTotalRevenue()

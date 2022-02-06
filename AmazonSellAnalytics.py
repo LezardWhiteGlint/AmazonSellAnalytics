@@ -226,7 +226,8 @@ class AmazonSellAnalytics(object):
                 name = targetSku
             )
             plotData.append(trace)
-        plot(plotData,filename="skuRevenu.html")
+        #plot(plotData,filename="skuRevenu.html")
+        py.plot(plotData, filename="skuRevenue", auto_open=True)
 
     def bestSellsMonitor(self,monitorSkuList):
         sku = monitorSkuList
@@ -276,7 +277,7 @@ class interface(object):
         self.analysis.updateDataBase(self.root.file)
 
     def reportOutput(self):
-        self.analysis.bestSellsMonitor(["2duragbutton","watchband-rainbow","watchband-rainbow44","fitbit-pink","fitbit-black","IK-0E1K-DW3N"])
+        self.analysis.bestSellsMonitor(["watchband-rainbow","watchband-rainbow44"])
         self.analysis.skuRevenu()
         self.analysis.dailyRevenu()
 
