@@ -34,7 +34,7 @@ class MonthlyGrossProfit(object):
             'nokiax100case-glass':10,
             'frogmushroom-sticker':6.8,
             '45mmcase-clear':7.5,
-            
+
         }
         self.removalCost = 10
         self.removalCount = 5
