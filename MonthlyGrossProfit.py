@@ -62,7 +62,7 @@ test.itemsCost = {
     'frogphonecase':9.5,
     'rainbowband22mm':10,
     'rainbowcase-40mm':8,
-    'rainbowcase-44mm':8,
+    'rainbowcase-44mm':11,
     'stretchyband3840mm':10,
     'stretchyband4244mm':10,
     'watchband-rainbow':20,
