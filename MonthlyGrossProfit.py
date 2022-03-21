@@ -7,11 +7,41 @@ class MonthlyGrossProfit(object):
     def __init__(self):
         self.filePath = filedialog.askopenfilename()
         self.sheet = pd.read_csv(self.filePath,skiprows=7,thousands=',')
-        self.itemsCost = {}
+        self.itemsCost = {
+            '20mm-band': 10,
+            '2duragbutton': 15,
+            '38mmcase': 8,
+            '42mmcase': 8,
+            'frogphonecase': 9.5,
+            'rainbowband22mm': 10,
+            'rainbowcase-40mm': 8,
+            'rainbowcase-44mm': 11,
+            'stretchyband3840mm': 10,
+            'stretchyband4244mm': 10,
+            'watchband-rainbow': 20,
+            'watchband-rainbow44': 20,
+            'cat banner': 18.5,
+            '4Z-H83K-ZUX5': 15,
+            'rainbow banner': 18.5,
+            'rainbow-airpodcase': 15,
+            'phonelens-rosegold': 9.1,
+            'phonelens-silver-gold': 9.1,
+            'phonelens-silver': 9.1,
+            'sink stopper black': 22.5,
+            'splash guards': 12.5,
+            'evil eye tiebacks': 14.5,
+            'back applicator-leopard': 11.5,
+            'nokiax100case-glass':10,
+            'frogmushroom-sticker':6.8,
+            '45mmcase-clear':7.5,
+            
+        }
+        self.removalCost = 10
+        self.removalCount = 5
         self.itemCount = {}
         self.totalRevenue = 0
         self.totalCost = 0
-        self.conversionRate = 6.3962
+        self.conversionRate = 6.3636
         self.sku = self.sheet['sku'].unique()
 
     def getTotalRevenue(self):
@@ -48,39 +78,13 @@ class MonthlyGrossProfit(object):
 
     def getGrossProfit(self):
         print("The total gross profit is")
-        print(self.totalRevenue*self.conversionRate - self.totalCost)
+        print(self.totalRevenue*self.conversionRate - self.totalCost - self.removalCost*self.removalCount)
 
 
 
 test = MonthlyGrossProfit()
 #set original cost
-test.itemsCost = {
-    '20mm-band':10,
-    '2duragbutton':15,
-    '38mmcase':8,
-    '42mmcase':8,
-    'frogphonecase':9.5,
-    'rainbowband22mm':10,
-    'rainbowcase-40mm':8,
-    'rainbowcase-44mm':11,
-    'stretchyband3840mm':10,
-    'stretchyband4244mm':10,
-    'watchband-rainbow':20,
-    'watchband-rainbow44':20,
-    'cat banner':18.5,
-    '4Z-H83K-ZUX5':15,
-    'rainbow banner':18.5,
-    'rainbow-airpodcase':15,
-    'phonelens-rosegold':9.1,
-    'phonelens-silver-gold':9.1,
-    'phonelens-silver':9.1,
-    'sink stopper black':22.5,
-    'splash guards':12.5,
-    'evil eye tiebacks':14.5,
-    'back applicator-leopard':11.5
 
-
-}
 
 test.getTotalRevenue()
 for i in test.getItemSoldCount().items():
